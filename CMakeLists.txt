@@ -13,6 +13,7 @@ include(${THIRD_PARTY_CMAKE_DIR}/threading.cmake)
 set(CMAKE_PREFIX_PATH "${CMAKE_SOURCE_DIR}/third_party_install")
 find_package(emp-tool REQUIRED)
 find_package(emp-ot REQUIRED)
+#set(Boost_USE_STATIC_LIBS ON) # libboost static linking
 find_package(Boost REQUIRED COMPONENTS program_options)
 
 include_directories(
