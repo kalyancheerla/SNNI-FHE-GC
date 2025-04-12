@@ -1,0 +1,12 @@
+[submodule "external/TinyGarble2.0"]
+	path = external/TinyGarble2.0
+	url = https://github.com/kalyancheerla/TinyGarble2.0.git
+[submodule "external/emp-tool"]
+	path = external/emp-tool
+	url = https://github.com/IntelLabs/emp-tool.git
+[submodule "external/emp-ot"]
+	path = external/emp-ot
+	url = https://github.com/IntelLabs/emp-ot.git
+[submodule "external/SEAL"]
+	path = external/SEAL
+	url = https://github.com/microsoft/SEAL.git
