@@ -1,2 +1,2 @@
-# SecureNN-FHE-GC
-Implementation of a Simple Neural Network using Fully Homomorphic Encryption through MS SEAL and Garbled Circuits using TinyGarble2.0
+# SNNI-FHE-GC
+Implementation of a Simple Neural Network Inference using Fully Homomorphic Encryption (CKKS Scheme from MS SEAL Library) and Garbled Circuits (Yao's GCs from TinyGarble2.0).
