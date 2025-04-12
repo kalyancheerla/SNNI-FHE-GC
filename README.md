@@ -29,10 +29,11 @@ cd build/
 
 # TinyNN
 # Terminal 1 (Alice)
-./bin/<binary-name>
+./bin/TinyNN -h
+./bin/TinyNN
 
 # Terminal 2 (Bob)
-./bin/<binary-name> -k 2    # provide 3 inputs when requested like 1 2 3.
+./bin/TinyNN -k 2    # provide 3 inputs when requested like 1 2 3.
 
 
 # BenchmarkNN
@@ -76,8 +77,8 @@ cd ..
 ```
 cd emp-ot
 cmake . -DCMAKE_INSTALL_PREFIX=../../third_party_install/
-make -j 
-make install -j 
+make -j
+make install -j
 cd ..
 ```
 
@@ -86,7 +87,7 @@ cd ..
 ```
 cd TinyGarble2.0
 cmake . -DCMAKE_INSTALL_PREFIX=../../third_party_install/
-make -j 
+make -j
 make install -j
 cd ..
 ```
