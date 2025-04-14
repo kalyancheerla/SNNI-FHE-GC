@@ -4,3 +4,9 @@
 [submodule "external/SEAL"]
 	path = external/SEAL
 	url = https://github.com/microsoft/SEAL.git
+[submodule "external/emp-ot"]
+	path = external/emp-ot
+	url = https://github.com/kalyancheerla/emp-ot.git
+[submodule "external/emp-tool"]
+	path = external/emp-tool
+	url = https://github.com/kalyancheerla/emp-tool.git

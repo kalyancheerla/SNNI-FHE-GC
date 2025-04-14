@@ -53,7 +53,8 @@ void Test(NetIO* io, int party) {
     chrono::duration<double> diff = end - start;
     cout << "[TEST] Round-trip time: " << diff.count() << " seconds " << endl;
     cout << "[MEM] Peak memory usage: " << getMaxRSS() / 1024.0 / 1024.0 << " MB" << endl;
-    cout << "[" << (party == ALICE ? "ALICE" : "BOB") << "] Sent: " << (float)(io->counter) << " bytes" << endl;
+    cout << "[" << (party == ALICE ? "ALICE" : "BOB") << "] Data sent: " << (float)(io->counter) << " bytes" << endl;
+    cout << "[" << (party == ALICE ? "ALICE" : "BOB") << "] Communication rounds: " << io->comm_rounds << endl;
 }
 
 
@@ -111,7 +112,8 @@ void PlainEvaluation(NetIO* io, int party) {
     chrono::duration<double> diff = end - start;
     cout << "[PLAIN] Round-trip time: " << diff.count() << " seconds " << endl;
     cout << "[MEM] Peak memory usage: " << getMaxRSS() / 1024.0 / 1024.0 << " MB" << endl;
-    cout << "[" << (party == ALICE ? "ALICE" : "BOB") << "] Sent: " << (float)(io->counter) << " bytes" << endl;
+    cout << "[" << (party == ALICE ? "ALICE" : "BOB") << "] Data sent: " << (float)(io->counter) << " bytes" << endl;
+    cout << "[" << (party == ALICE ? "ALICE" : "BOB") << "] Communication rounds: " << io->comm_rounds << endl;
 }
 
 
@@ -282,7 +284,8 @@ void GCEvaluation(NetIO* io, int party) {
     chrono::duration<double> diff = end - start;
     cout << "[GC] Round-trip time: " << diff.count() << " seconds " << endl;
     cout << "[MEM] Peak memory usage: " << getMaxRSS() / 1024.0 / 1024.0 << " MB" << endl;
-    cout << "[" << (party == ALICE ? "ALICE" : "BOB") << "] Sent: " << (float)(io->counter)/1024 << " KB" << " (" << io->counter << "B)" << endl;
+    cout << "[" << (party == ALICE ? "ALICE" : "BOB") << "] Data sent: " << (float)(io->counter)/1024 << " KB" << " (" << io->counter << "B)" << endl;
+    cout << "[" << (party == ALICE ? "ALICE" : "BOB") << "] Communication rounds: " << io->comm_rounds << endl;
 }
 
 
@@ -517,7 +520,8 @@ void FHEPolynomialEvaluation(NetIO* io, int party) {
     chrono::duration<double> diff = end - start;
     cout << "[FHE] Round-trip time: " << diff.count() << " seconds " << endl;
     cout << "[MEM] Peak memory usage: " << getMaxRSS() / 1024.0 / 1024.0 << " MB" << endl;
-    cout << "[" << (party == ALICE ? "ALICE" : "BOB") << "] Sent: " << (float)(io->counter)/1024 << " KB" << " (" << io->counter << "B)" << endl;
+    cout << "[" << (party == ALICE ? "ALICE" : "BOB") << "] Data sent: " << (float)(io->counter)/1024 << " KB" << " (" << io->counter << "B)" << endl;
+    cout << "[" << (party == ALICE ? "ALICE" : "BOB") << "] Communication rounds: " << io->comm_rounds << endl;
 }
 
 

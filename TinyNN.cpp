@@ -88,6 +88,7 @@ void MyTinyNN(NetIO* io, int party) {
         cout << "| Bias: " << b2 << endl;
     }
 
+//    cout << "[1 " << (party == ALICE ? "ALICE" : "BOB") << "] Rounds: " << io->comm_rounds << "(" << io->previous_op << ")" << endl;
     // Encrypt inputs and weights
     auto x_enc  = TGPI_SH->TG_int_init(BOB, bitwidth_in, x, 1, 3);
     auto w1_enc = TGPI_SH->TG_int_init(ALICE, bitwidth_in, w1, 3, 4);
@@ -95,17 +96,21 @@ void MyTinyNN(NetIO* io, int party) {
     auto w2_enc = TGPI_SH->TG_int_init(ALICE, bitwidth_in, w2, 4, 1);
     auto b2_enc = TGPI_SH->TG_int_init(ALICE, bitwidth_in, b2);
 
+    cout << "[2 " << (party == ALICE ? "ALICE" : "BOB") << "] Rounds: " << io->comm_rounds << "(" << io->previous_op << ")" << endl;
     TGPI_SH->gen_input_labels();
+    cout << "[3 " << (party == ALICE ? "ALICE" : "BOB") << "] Rounds: " << io->comm_rounds << "(" << io->previous_op << ")" << endl;
     TGPI_SH->retrieve_input_vector_labels(x_enc,  BOB, bitwidth_in, 1, 3);
     TGPI_SH->retrieve_input_vector_labels(w1_enc, ALICE, bitwidth_in, 3, 4);
     TGPI_SH->retrieve_input_vector_labels(b1_enc, ALICE, bitwidth_in, 4);
     TGPI_SH->retrieve_input_vector_labels(w2_enc, ALICE, bitwidth_in, 4, 1);
     TGPI_SH->retrieve_input_labels(b2_enc, ALICE, bitwidth_in);
     TGPI_SH->clear_input_labels();
+//    cout << "[4 " << (party == ALICE ? "ALICE" : "BOB") << "] Rounds: " << io->comm_rounds << "(" << io->previous_op << ")" << endl;
 
     // Matrix multiplication using mat_mult (outputs are 64-bit wide)
     auto z1_enc = TGPI_SH->TG_int(bitwidth_out, 1, 4);
     TGPI_SH->mat_mult(1, 3, 4, x_enc, w1_enc, z1_enc, 0, bitwidth_in, bitwidth_in, bitwidth_out, bitwidth_out);
+//    cout << "[5 " << (party == ALICE ? "ALICE" : "BOB") << "] Rounds: " << io->comm_rounds << "(" << io->previous_op << ")" << endl;
 
     auto z1_bias = TGPI_SH->TG_int(bitwidth_in, 1, 4);
     for (int j = 0; j < 4; ++j) {
@@ -117,6 +122,7 @@ void MyTinyNN(NetIO* io, int party) {
         TGPI_SH->add(z1_bias[0][j], z1_bias[0][j], b1_enc[j], bitwidth_in, bitwidth_in);
         TGPI_SH->relu(z1_bias[0][j], bitwidth_in);
     }
+//    cout << "[6 " << (party == ALICE ? "ALICE" : "BOB") << "] Rounds: " << io->comm_rounds << "(" << io->previous_op << ")" << endl;
 
     // Reveal outputs
     cout << "[Debug] z2 = [" << endl;
@@ -125,22 +131,27 @@ void MyTinyNN(NetIO* io, int party) {
         cout << j << ": " << out_j << " " << (double(out_j) / FIXED_POINT_SCALE) << endl;
     }
     cout << "]" << endl;
+//    cout << "[7 " << (party == ALICE ? "ALICE" : "BOB") << "] Rounds: " << io->comm_rounds << "(" << io->previous_op << ")" << endl;
 
     // Again Mat Mult
     auto z2_enc = TGPI_SH->TG_int(bitwidth_out, 1, 1);
     TGPI_SH->mat_mult(1, 4, 1, z1_bias, w2_enc, z2_enc, 0, bitwidth_in, bitwidth_in, bitwidth_out, bitwidth_out);
+//    cout << "[8 " << (party == ALICE ? "ALICE" : "BOB") << "] Rounds: " << io->comm_rounds << "(" << io->previous_op << ")" << endl;
 
     // Down scale after multiplication
     auto z2_enc_scaled = TGPI_SH->TG_int(bitwidth_in, 1, 1);
     divscale_and_reduce_bitwidth(TGPI_SH, z2_enc_scaled[0][0], z2_enc[0][0], FIXED_POINT_SCALE, bitwidth_out, bitwidth_in);
+//    cout << "[9 " << (party == ALICE ? "ALICE" : "BOB") << "] Rounds: " << io->comm_rounds << "(" << io->previous_op << ")" << endl;
 
 //    int64_t out_temp = TGPI_SH->reveal(z2_enc_scaled[0][0], bitwidth_in);
 //    cout << "Neuron 0: " << out_temp << " " << (double(out_temp) / FIXED_POINT_SCALE) << endl;
 
     TGPI_SH->add(z2_enc_scaled[0][0], z2_enc_scaled[0][0], b2_enc, bitwidth_in, bitwidth_in);
 
+//    cout << "[10 " << (party == ALICE ? "ALICE" : "BOB") << "] Rounds: " << io->comm_rounds << "(" << io->previous_op << ")" << endl;
     int64_t out_j = TGPI_SH->reveal(z2_enc_scaled[0][0], bitwidth_in);
     cout << "[Debug] z3 = [" << out_j << " " << (double(out_j) / FIXED_POINT_SCALE) << "]" << endl;
+//    cout << "[11 " << (party == ALICE ? "ALICE" : "BOB") << "] Rounds: " << io->comm_rounds << "(" << io->previous_op << ")" << endl;
 
     // sigmoid using poly approx.
     int64_t c0 = static_cast<int64_t>(0.5  * FIXED_POINT_SCALE);
@@ -150,35 +161,44 @@ void MyTinyNN(NetIO* io, int party) {
     // Compute z²
     auto z2_sq = TGPI_SH->TG_int(bitwidth_out);
     TGPI_SH->mult(z2_sq, z2_enc_scaled[0][0], z2_enc_scaled[0][0], bitwidth_in);
+//    cout << "[12 " << (party == ALICE ? "ALICE" : "BOB") << "] Rounds: " << io->comm_rounds << "(" << io->previous_op << ")" << endl;
 
     // Down scale after multiplication
     auto z2_sq_scaled = TGPI_SH->TG_int(bitwidth_in);
     divscale_and_reduce_bitwidth(TGPI_SH, z2_sq_scaled, z2_sq, FIXED_POINT_SCALE, bitwidth_out, bitwidth_in);
+//    cout << "[13 " << (party == ALICE ? "ALICE" : "BOB") << "] Rounds: " << io->comm_rounds << "(" << io->previous_op << ")" << endl;
 
     // term1 = c1 * z
     auto term1 = TGPI_SH->TG_int(bitwidth_out);
     TGPI_SH->mult(term1, z2_enc_scaled[0][0], c1, bitwidth_in, bitwidth_in);
+//    cout << "[14 " << (party == ALICE ? "ALICE" : "BOB") << "] Rounds: " << io->comm_rounds << "(" << io->previous_op << ")" << endl;
 
     auto term1_scaled = TGPI_SH->TG_int(bitwidth_in);
     divscale_and_reduce_bitwidth(TGPI_SH, term1_scaled, term1, FIXED_POINT_SCALE, bitwidth_out, bitwidth_in);
+//    cout << "[15 " << (party == ALICE ? "ALICE" : "BOB") << "] Rounds: " << io->comm_rounds << "(" << io->previous_op << ")" << endl;
 
     // term2 = c2 * z²
     auto term2 = TGPI_SH->TG_int(bitwidth_out);
     TGPI_SH->mult(term2, z2_sq_scaled, c2, bitwidth_in, bitwidth_in);
+//    cout << "[16 " << (party == ALICE ? "ALICE" : "BOB") << "] Rounds: " << io->comm_rounds << "(" << io->previous_op << ")" << endl;
 
     auto term2_scaled = TGPI_SH->TG_int(bitwidth_in);
     divscale_and_reduce_bitwidth(TGPI_SH, term2_scaled, term2, FIXED_POINT_SCALE, bitwidth_out, bitwidth_in);
+//    cout << "[17 " << (party == ALICE ? "ALICE" : "BOB") << "] Rounds: " << io->comm_rounds << "(" << io->previous_op << ")" << endl;
 
     // term1 - term2
     auto sigmoid_out = TGPI_SH->TG_int(bitwidth_in);
     TGPI_SH->sub(sigmoid_out, term1_scaled, term2_scaled, bitwidth_in, bitwidth_in);
+//    cout << "[18 " << (party == ALICE ? "ALICE" : "BOB") << "] Rounds: " << io->comm_rounds << "(" << io->previous_op << ")" << endl;
 
     // Add constant c0
     TGPI_SH->add(sigmoid_out, sigmoid_out, c0, bitwidth_in);
 
+//    cout << "[19 " << (party == ALICE ? "ALICE" : "BOB") << "] Rounds: " << io->comm_rounds << "(" << io->previous_op << ")" << endl;
     // Reveal result
     int64_t out_val = TGPI_SH->reveal(sigmoid_out, bitwidth_in);
     cout << "[Output] z4 = " << out_val << " " << (double(out_val) / FIXED_POINT_SCALE) << endl;
+//    cout << "[20 " << (party == ALICE ? "ALICE" : "BOB") << "] Rounds: " << io->comm_rounds << "(" << io->previous_op << ")" << endl;
 
     // Cleanup
     TGPI_SH->clear_TG_int(x_enc, 1, 3);

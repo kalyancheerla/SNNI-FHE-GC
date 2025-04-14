@@ -66,9 +66,7 @@ sudo ./external/TinyGarble2.0/install_scripts/install_dependencies.sh
 ```
 cd external  #since all external repos are present here.
 cd emp-tool
-cmake . -DCMAKE_INSTALL_PREFIX=../../third_party_install/
-make -j
-make install -j
+cmake . -DCMAKE_INSTALL_PREFIX=../../third_party_install/ && make -j && make install -j
 cd ..
 ```
 
@@ -76,9 +74,7 @@ cd ..
 
 ```
 cd emp-ot
-cmake . -DCMAKE_INSTALL_PREFIX=../../third_party_install/
-make -j
-make install -j
+cmake . -DCMAKE_INSTALL_PREFIX=../../third_party_install/ && make -j && make install -j
 cd ..
 ```
 
@@ -86,17 +82,13 @@ cd ..
 
 ```
 cd TinyGarble2.0
-cmake . -DCMAKE_INSTALL_PREFIX=../../third_party_install/
-make -j
-make install -j
+cmake . -DCMAKE_INSTALL_PREFIX=../../third_party_install/ && make -j && make install -j
 cd ..
 ```
 6th, install SEAL:
 ```
 cd SEAL
-cmake -S . -B build -DCMAKE_INSTALL_PREFIX=../../third_party_install/
-cmake --build build
-cmake --install build
+cmake -S . -B build -DCMAKE_INSTALL_PREFIX=../../third_party_install/ && cmake --build build && cmake --install build
 cd ../..
 ```
 
@@ -107,9 +99,7 @@ With this setup, we will have required header files, libraries, and cmake files 
 7th, building project:
 ```
 cd build/
-cmake ..
-make -j
-ls -la bin/
+rm -rf * && cmake .. && make -j && ls -la bin/
 ```
 
 Finally you can find the binaries in the `bin/` directory.
