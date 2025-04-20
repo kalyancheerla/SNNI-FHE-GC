@@ -7,11 +7,39 @@
 #include <vector>
 #include <iostream>
 #include <sys/resource.h>
+#include <boost/algorithm/string.hpp>
 
 using namespace std;
 using namespace seal;
 using namespace emp;
+
+namespace boost { namespace program_options {
+template<>
+void validate(boost::any& v, const std::vector<std::string>& values, std::vector<double>*, int) {
+    if (values.size() != 1)
+        throw validation_error(validation_error::invalid_option_value);
+
+    std::vector<std::string> tokens;
+    boost::split(tokens, values[0], boost::is_any_of(","));
+
+    if (tokens.size() != 3) {
+        throw validation_error(validation_error::invalid_option_value, "Exactly 3 comma-separated values required");
+    }
+
+    std::vector<double> result;
+    for (const auto& token : tokens) {
+        try {
+            result.push_back(std::stod(token));
+        } catch (...) {
+            throw validation_error(validation_error::invalid_option_value, "Non-numeric value found");
+        }
+    }
+
+    v = boost::any(result);
+}
+}} // namespace boost::program_options
 namespace po = boost::program_options;
+
 
 
 size_t getMaxRSS() {
@@ -59,7 +87,7 @@ void Test(NetIO* io, int party) {
 
 
 
-void PlainEvaluation(NetIO* io, int party) {
+void PlainEvaluation(NetIO* io, int party, const vector<double>& input) {
     using Clock = chrono::high_resolution_clock;
     auto start = Clock::now();
 
@@ -97,7 +125,7 @@ void PlainEvaluation(NetIO* io, int party) {
 
     } else {
        // Bob sends input vector
-        vector<double> input = {1.0, 2.0, 3.0};
+        //vector<double> input = {1.0, 2.0, 3.0};
         uint32_t len = input.size();
         io->send_data(&len, sizeof(len));
         io->send_data(input.data(), len * sizeof(double));
@@ -141,7 +169,7 @@ void divscale_and_reduce_bitwidth(TinyGarblePI_SH* TGPI_SH,
 }
 
 
-void GCEvaluation(NetIO* io, int party) {
+void GCEvaluation(NetIO* io, int party, const vector<double>& input) {
     using Clock = chrono::high_resolution_clock;
     auto start = Clock::now();
 
@@ -154,11 +182,12 @@ void GCEvaluation(NetIO* io, int party) {
     vector<vector<int64_t>> x(1, vector<int64_t>(3));
     if (party == BOB) {
         // Get Inputs
-        vector<double> x_inputs = {1.0, 2.0, 3.0};
+        //vector<double> x_inputs = {1.0, 2.0, 3.0};
 
         // Scale
         for (int j = 0; j < 3; ++j)
-            x[0][j] = static_cast<int64_t>(x_inputs[j] * FIXED_POINT_SCALE);
+            //x[0][j] = static_cast<int64_t>(x_inputs[j] * FIXED_POINT_SCALE);
+            x[0][j] = static_cast<int64_t>(input[j] * FIXED_POINT_SCALE);
     }
 
     // Layer 1 weights and biases
@@ -331,7 +360,7 @@ void recv_ciphertext(NetIO* io, Ciphertext& ct, SEALContext context) {
     ct.load(context, ss);
 }
 
-void FHEPolynomialEvaluation(NetIO* io, int party) {
+void FHEPolynomialEvaluation(NetIO* io, int party, const vector<double>& input) {
     using Clock = chrono::high_resolution_clock;
     auto start = Clock::now();
 
@@ -346,7 +375,7 @@ void FHEPolynomialEvaluation(NetIO* io, int party) {
 
     if (party == BOB) {
         // Collect Inputs
-        vector<double> x = {1.0, 2.0, 3.0};
+        //vector<double> x = {1.0, 2.0, 3.0};
 
         KeyGenerator keygen(context);
         SecretKey secret_key = keygen.secret_key();
@@ -367,7 +396,8 @@ void FHEPolynomialEvaluation(NetIO* io, int party) {
         size_t slot_count = encoder.slot_count(); // #slots = 8192 = 16384/2
         vector<double> x_slots(slot_count, 0.0);
         for (int i = 0; i < 3; i++)
-            x_slots[i] = x[i];
+            //x_slots[i] = x[i];
+            x_slots[i] = input[i];
 
         Plaintext plain_x;
         encoder.encode(x_slots, scale, plain_x);
@@ -528,7 +558,8 @@ void FHEPolynomialEvaluation(NetIO* io, int party) {
 
 int main(int argc, char** argv) {
     int party = 1, port = 1234;
-    string server_ip = "127.0.0.1", program = "FHE";
+    string server_ip = "127.0.0.1", program = "PLAIN";
+    vector<double> input;
 
     po::options_description desc{"Allowed options"};
     desc.add_options()
@@ -536,7 +567,12 @@ int main(int argc, char** argv) {
         ("party,k", po::value<int>(&party)->default_value(1), "party id: 1 for Alice, 2 for Bob")
         ("port,p", po::value<int>(&port)->default_value(1234), "socket port")
         ("server_ip,s", po::value<string>(&server_ip)->default_value("127.0.0.1"), "server's IP address")
-        ("program,f", po::value<string>(&program)->default_value("PLAIN"), "Function to execute: PLAIN or GC or FHE or TEST");
+        ("program,f", po::value<string>(&program)->default_value("PLAIN"), "Function to execute: PLAIN or GC or FHE or TEST")
+        ("input,i", po::value<vector<double>>(&input)
+                        //->multitoken()
+                        ->default_value(vector<double>{1.0, 2.0, 3.0}, "1.0,2.0,3.0"),
+         "Input vector values");
+
 
     po::variables_map vm;
     try {
@@ -555,11 +591,11 @@ int main(int argc, char** argv) {
     io->set_nodelay();
 
     if (program == "PLAIN")
-        PlainEvaluation(io, party);
+        PlainEvaluation(io, party, input);
     else if (program == "GC")
-        GCEvaluation(io, party);
+        GCEvaluation(io, party, input);
     else if (program == "FHE")
-        FHEPolynomialEvaluation(io, party);
+        FHEPolynomialEvaluation(io, party, input);
     else if (program == "TEST")
         Test(io, party);
     else
